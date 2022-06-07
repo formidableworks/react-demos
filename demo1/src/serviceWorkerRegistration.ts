@@ -61,6 +61,11 @@ function registerValidSW(swUrl: string, config?: Config) {
   navigator.serviceWorker
     .register(swUrl)
     .then((registration) => {
+      // note-worty bit: on sucessful service worker registration
+      // begin polling the static host for service worker updates.
+      setInterval(() => {
+        registration.update();
+      }, 1000 * 30);
       registration.onupdatefound = () => {
         const installingWorker = registration.installing;
         if (installingWorker == null) {
