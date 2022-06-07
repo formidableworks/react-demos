@@ -36,10 +36,10 @@ npm run build
 
 actual implementation was fairly simple; working with service workers and understanding their lifecycle required alot of studying.
 
-- [index.tsx](./src/index.tsx) - enables serviceworker-redux communication.
-- [serviceWorkerRegistration.ts](./src/serviceWorkerRegistration.ts) - update polling.
-- [swAppUpdaterSlice.ts](./src/redux/swAppUpdaterSlice.ts) - activates waiting sw and page reloading.
-- [SnackbarDeployer.tsx](./src/swUpdateTest/SnackbarDeployer.tsx) - reads from redux and deploys the snackbar.
+- [index.tsx](./src/index.tsx#L28-L37) - enables serviceworker-redux communication.
+- [serviceWorkerRegistration.ts](./src/serviceWorkerRegistration.ts#L64-L68) - update polling.
+- [swAppUpdaterSlice.ts](./src/redux/swAppUpdaterSlice.ts#L28-L31) - activates waiting sw and page reloading.
+- [SnackbarDeployer.tsx](./src/swUpdateTest/SnackbarDeployer.tsx#L21-L31) - reads from redux and deploys the snackbar.
 
 ## pros and cons
 
