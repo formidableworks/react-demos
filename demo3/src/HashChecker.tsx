@@ -2,56 +2,77 @@ import { Box, Button, CircularProgress, IconButton, Tooltip } from '@mui/materia
 import UpgradeIcon from '@mui/icons-material/Upgrade';
 import { useSnackbar } from 'notistack';
 import RefreshIcon from '@mui/icons-material/Refresh';
-
 import { useState, useCallback, useEffect } from 'react';
+
+function getEnvelopedString(
+  subjectString: string,
+  startDelimeter: string,
+  endDelimiter: string
+): string | null {
+  const envelopedString = subjectString.substring(
+    subjectString.indexOf(startDelimeter) + startDelimeter.length,
+    subjectString.lastIndexOf(endDelimiter)
+  );
+  // ensure hash contains only lowercase and number chars.
+  if (/^[a-z0-9]*$/.test(envelopedString)) {
+    return envelopedString;
+  }
+  return null;
+}
 
 interface Props {
   intervalTime: number;
   numberOfSegments: number;
 }
-export function MainScriptChecker({ intervalTime, numberOfSegments }: Props): JSX.Element {
+export function HashChecker({ intervalTime, numberOfSegments }: Props): JSX.Element {
   const { enqueueSnackbar } = useSnackbar();
   const [progress, setProgress] = useState(100 / numberOfSegments);
   const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
 
-  const triggerHeadFetch = useCallback(() => {
+  const triggerHashCheck = useCallback(() => {
     setProgress(100 / numberOfSegments);
-    const mainScript = document.querySelector('script[src^="/static/js/"][defer]');
-    const mainScriptpath = mainScript?.getAttribute('src'); // example of value: "/static/js/main.4141834e.js"
-    if (!mainScriptpath) return;
 
-    const fetchHead = async () => {
+    const FetchIndex = async () => {
       try {
-        const response = await fetch(mainScriptpath, {
+        const response = await fetch('/', {
           cache: 'no-store',
-          method: 'HEAD',
+          method: 'GET',
         });
-        // serve - https://www.npmjs.com/package/serve
-        // serve is being used to host create react apps static output bundle.
-        // if a path no longer exists, the content of index.html is sent in its place. -- this is to aid SPA's with client side routing.
-        // So in order to detect the main script path no longer exists
-        // (ie: an update is available) the responses contentType must be asserted.
-        const contentType = response.headers.get('content-type');
-        const isJavascript = contentType?.toLowerCase().includes('application/javascript');
-        if (response.ok && !isJavascript) {
-          setIsUpdateAvailable(true);
-          enqueueSnackbar('Update available!', {
-            variant: 'info',
-            persist: true,
-            preventDuplicate: true,
-            anchorOrigin: { horizontal: 'center', vertical: 'top' },
-            action: (
-              <Button color="inherit" variant="outlined" onClick={() => document.location.reload()}>
-                Reload
-              </Button>
-            ),
-          });
+        if (!response.ok) return;
+        const responseText = await response.text();
+        const newBuildHash = getEnvelopedString(responseText, 'main.', '.js');
+        if (newBuildHash !== null) {
+          // after a hash has been obtained, get the current hash.
+          const mainScript = document.querySelector('script[src^="/static/js/"][defer]');
+          const mainScriptPath = mainScript?.getAttribute('src'); // example of value: "/static/js/main.4141834e.js"
+          if (!mainScriptPath) return;
+          const currentBuildHash = getEnvelopedString(mainScriptPath, 'main.', '.js');
+
+          // if the hashes differ, an update is available.
+          if (currentBuildHash !== newBuildHash) {
+            setIsUpdateAvailable(true);
+            enqueueSnackbar('Update available!', {
+              variant: 'info',
+              persist: true,
+              preventDuplicate: true,
+              anchorOrigin: { horizontal: 'center', vertical: 'top' },
+              action: (
+                <Button
+                  color="inherit"
+                  variant="outlined"
+                  onClick={() => document.location.reload()}
+                >
+                  Reload
+                </Button>
+              ),
+            });
+          }
         }
       } catch (error) {
-        console.error('fetch network error1', error);
+        console.error('fetch network error', error);
       }
     };
-    fetchHead();
+    FetchIndex();
   }, [enqueueSnackbar, numberOfSegments]);
 
   useEffect(() => {
@@ -66,15 +87,15 @@ export function MainScriptChecker({ intervalTime, numberOfSegments }: Props): JS
 
   useEffect(() => {
     if (progress === 0) {
-      triggerHeadFetch();
+      triggerHashCheck();
     }
-  }, [progress, triggerHeadFetch]);
+  }, [progress, triggerHashCheck]);
 
   const onIconButtonClick = () => {
     if (isUpdateAvailable) {
       document.location.reload();
     } else {
-      triggerHeadFetch();
+      triggerHashCheck();
     }
   };
 

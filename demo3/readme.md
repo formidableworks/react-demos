@@ -1,6 +1,6 @@
 # demo3
 
-simple create-react-app demo with update prompts (driven by request failures).
+simple create-react-app demo with update prompts (driven by build hashes).
 
 ## Quick Start
 
@@ -18,7 +18,7 @@ npm run build
 # visit the presented url in a chrome tab and open the dev tools.
 npm run serve
 
-# use an editor to update the h2 to "Main Script Checker 2".
+# use an editor to update the h2 to "Hash Checker 2".
 # this will ensure the build will produce a different hash.
 code ./src/App.tsx
 
@@ -31,11 +31,8 @@ npm run build
 
 ## important implementation bits.
 
-- [MainScriptChecker.tsx](./src/MainScriptChecker.tsx#L23-L55) - performs a hhtp head request on the 'main script', failure case means an update is available.
+- [HashChecker.tsx](./src/HashChecker.tsx#L35-L74) - performs a http get request on index.html, searches for an updated hash (an update is available).
 
 ## pros and cons
 
-- **pro** no service worker complexity, just plain old react.
-- **pro** implementation is highly portable (self contained).
-- **pro** since the polling code lives in reactland™, its easy to create a pretty widget.
-- **con** failure case is dependant on the hosting tech (used to host create react app's static output).
+- **pro** update check is dependent on index.html contents, not host tech. (index.html is guaranteed to exist on a successful deployment)
